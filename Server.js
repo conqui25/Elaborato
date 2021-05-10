@@ -1,6 +1,40 @@
-var express = require('express');
-var app = express();
-var fs = require("fs");
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const fs = require("fs");
+const glob = require('globe');
+const mysql = require('mysql');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlEncoded({extended: false}));
+app.use(express.stataic('./public'))
+
+var con = mysql.createConnection({
+      host: "localhost",
+      user: "yourusername",
+      password: "yourpassword",
+      database: "mydb"
+    });
+/*
+Api structure:
+register
+login
+update profile
+---
+add book
+update book
+del book
+---
+add authors
+update authors
+del authors
+---
+add review
+update review
+del review
+---
+*/
+
 
 app.get('/users', function (req, res) {
       console.log( "questo è il risultato del get" );
