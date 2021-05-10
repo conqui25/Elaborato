@@ -2,12 +2,11 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const fs = require("fs");
-const glob = require('globe');
 const mysql = require('mysql');
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlEncoded({extended: false}));
-app.use(express.stataic('./public'))
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static('./public'))
 
 var con = mysql.createConnection({
       host: "localhost",
