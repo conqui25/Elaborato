@@ -17,6 +17,9 @@ app.use(session({
         sameSite: true
     }
 }))
+var server = app.listen(8080, function () {
+    console.log("Listening at port 8080");
+})
 
 var db = mysql.createConnection({
     host: "localhost",
@@ -26,18 +29,23 @@ var db = mysql.createConnection({
 });
 /*
 Api structure:
-register
-login
-update profile
+register /done
+login /done
+update profile /TODO
 ---
+get book
+get books
 add book
 update book
 del book
 ---
-add authors
+get author
+get authors
+add authors /done
 update authors
 del authors
 ---
+get reviews
 add review
 update review
 del review
@@ -54,7 +62,6 @@ db.connect(function (err) {
 
 app.post('/register', function (req, res) {
     console.log("register");
-    console.log(req.session);
     if (req.session.loggedIn) {
         console.log("id sessione: " + req.session.userId);
         res.send("already logged")
@@ -86,19 +93,17 @@ app.post('/register', function (req, res) {
             password: req.body.password,
             email: req.body.email
         };
-        sql = 'INSERT INTO users SET ?';/*
-        db.query(sql, post, (err, res) => {
+        sql = 'INSERT INTO users SET ?';
+        db.query(sql, post, (err, results) => {
             if (err) throw err;
-            console.log(res);
-        });*/
-        res.send("register succesful");
+            res.send("register succesful");
+        });
 
     });
 });
 
 app.post('/login', function (req, res) {
     console.log("login");
-    console.log(req.session);
     let username = req.body.username;
     let password = req.body.password;
     let sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
@@ -111,7 +116,6 @@ app.post('/login', function (req, res) {
             if (results.length > 0) {
                 result = JSON.parse(JSON.stringify(results))[0];
                 console.log(result);
-                //console.log(result[0].rowdDataPacket.id);
                 req.session.userId = result.id
                 req.session.loggedIn = true;
                 console.log("id sessione appena creato: " + req.session.userId);
@@ -133,10 +137,68 @@ app.get('/logout', function (req, res) {
     })
     res.clearCookie("sid");
 })
+function adminCheck(session, res) {
 
-var server = app.listen(8080, function () {
-    //var host = server.address().address
-    //var port = server.address().port
-    console.log("Listening at port 8080");
-    //"Example app listening at http://%s:%s", host, port)
-})
+    if (!session.loggedIn) {
+        res.send("not logged");
+        return false;
+    }
+    let userId = 0000000001//session.userId;
+    let sql = 'SELECT users.admin FROM users WHERE users.id = ? LIMIT 1';
+    db.query(sql, userId, (err, results) => {
+        if (err) throw err;
+        if (results.length <= 0) {
+            res.send("account invalid");
+            return false;
+        }
+        result = JSON.parse(JSON.stringify(results))[0];
+        console.log(result);
+        if (!result.admin) {
+            res.send("you don't have permission to add an author");
+            return false;
+        }
+    });
+    return true;
+}
+app.post('/author/add', function (req, res) {
+    if(adminCheck(req.session, res)){
+        let post = {
+            name: req.body.name,
+            biography: req.body.biography
+        };
+        sql = 'INSERT INTO authors SET ?';
+        db.query(sql, post, (err, results) => {
+            if (err) throw err;
+            res.send("register succesful");
+        });
+    }
+});
+/*
+app.post('/book/add', function (req, res) {
+    if (req.session.loggedIn)
+        userId = req.session.userId;
+    let sql = 'SELECT user.admin FROM users WHERE users.id = ? LIMIT 1';
+    db.query(sql, userId, (err, results) => {
+        if (err) throw err;
+        if (results.length = 0) {
+            res.send("account invalid");
+            return;
+        } else if (!JSON.parse(JSON.stringify(results))[0].admin) {
+            res.send("you don't have permission to add a book");
+            return;
+        }
+    });
+    let post = {
+        author_id: req.body.firstName,
+        lastName: req.body.lastName,
+        username: req.body.username,
+        password: req.body.password,
+        email: req.body.email
+    };
+    sql = 'INSERT INTO books SET ?';
+        db.query(sql, post, (err, results) => {
+            if (err) throw err;
+            res.send("register succesful");
+        });
+});
+*/
