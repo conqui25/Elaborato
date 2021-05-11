@@ -55,40 +55,45 @@ db.connect(function (err) {
 app.post('/register', function (req, res) {
     console.log("register");
     console.log(req.session);
-
     if (req.session.loggedIn) {
         console.log("id sessione: " + req.session.userId);
         res.send("already logged")
         res.end();
-    } else {
-        let username = req.body.username;
-        let email = req.body.email;
-        //controllo username
-        //controllo email
-        let sql = 'SELECT 1 FROM users WHERE users.username = ? OR users.email = ? LIMIT 1';
-        db.query(sql, [username, email], (err, results) => {
-            if (err) throw err;
-            if (results.length > 0) {
-                res.send('already exist');
-                //result = JSON.parse(JSON.stringify(results))[0];
-                //console.log(result);
-            } else {
-                let post = {
-                    firstName: req.body.firstName,
-                    lastName: req.body.lastName,
-                    username: req.body.username,
-                    password: req.body.password,
-                    email: req.body.email
-                };
-                sql = 'INSERT INTO users SET ?';
-                db.query(sql, post, (err, res) => {
-                    if (err) throw err;
-                    console.log(res);
-                });
-                res.send("register succesful");
-            }
-        });
+        return;
     }
+    let username = req.body.username;
+    let email = req.body.email;
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(String(email).toLowerCase())) {
+        res.send("invalid email")
+        return;
+    }
+    //controllo username
+    //controllo email
+    let sql = 'SELECT 1 FROM users WHERE users.username = ? OR users.email = ? LIMIT 1';
+    db.query(sql, [username, email], (err, results) => {
+        if (err) throw err;
+        if (results.length > 0) {
+            res.send('already exist');
+            return;
+            //result = JSON.parse(JSON.stringify(results))[0];
+            //console.log(result);
+        }
+        let post = {
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            username: req.body.username,
+            password: req.body.password,
+            email: req.body.email
+        };
+        sql = 'INSERT INTO users SET ?';/*
+        db.query(sql, post, (err, res) => {
+            if (err) throw err;
+            console.log(res);
+        });*/
+        res.send("register succesful");
+
+    });
 });
 
 app.post('/login', function (req, res) {
