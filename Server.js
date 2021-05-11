@@ -3,6 +3,8 @@ const app = express();
 const session = require('express-session');
 const fs = require("fs");
 const mysql = require('mysql');
+const ejs = require("ejs");
+const time = (1000 * 60 * 60 * 2);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -13,11 +15,11 @@ app.use(session({
       saveUninitialized: false,
       secret: "s3cr3t!",
       cookie: {
-            maxAge: 1000*60*60*2,
-            sameSite: true,
-            secure: true
+            maxAge: time,
+            sameSite: true
       }
 }))
+app.engine('html', require('ejs').renderFile);
 
 var db = mysql.createConnection({
       host: "localhost",
@@ -52,7 +54,15 @@ db.connect(function (err) {
       }
       console.log('connected as id ' + db.threadId);
 });
-
+app.get('/', function (req, res) {
+      console.log("user id: ");
+      console.log(req.session);
+      if(req.session.userId){
+            res.send("logged sessionid: " + req.session.userId);
+      } else {
+            res.render('login.html');
+      }
+});
 app.post('/register', function (req, res) {
       console.log("register");
       let sql = 'INSERT INTO users SET ?';
@@ -75,26 +85,32 @@ app.post('/register', function (req, res) {
 
 app.post('/login', function (req, res) {
       console.log("login");
-      if (req.session.userId)(
+      console.log(req.body);
+      console.log(req.session);
+      console.log(req.session.userId);
+      if (req.session.userId) {
+            console.log("questo id sessione: " + req.session.userId);
             res.send("already logged")
-      )
+            res.end();
+      }
       let sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
       let username = req.body.username;
       let password = req.body.password;
       if (username && password) {
             db.query(sql, [username, password], (err, results) => {
                   if (results.length > 0) {
-                        result=JSON.parse(JSON.stringify(results))[0];
-                        console.log(result); 
+                        result = JSON.parse(JSON.stringify(results))[0];
+                        console.log(result);
                         //console.log(result[0].rowdDataPacket.id);
                         req.session.userId = result.id
-				req.session.loggedin = true;
-				//req.session.username = result.id;
-                        console.log(req.session.userId);
-			} else {
-				res.send('Incorrect Username and/or Password!');
-			}
-			res.end();
+                        req.session.loggedin = true;
+                        //req.session.username = result.id;
+                        console.log("id sessione appena creato: " + req.session.userId);
+                        return res.redirect("/");
+                  } else {
+                        res.send('Incorrect Username and/or Password!');
+                  }
+                  res.end();
                   if (err) throw err;
                   console.log('success');
             });
@@ -104,12 +120,16 @@ app.post('/login', function (req, res) {
       }
 });
 
-app.post('/login', function (req, res){
+app.post('/logout', function (req, res) {
       req.session.destroy(err => {
             if (err) throw err;
       })
       res.clearCookie("sid");
 })
+app.get('/req', function (req, res) {
+      res.send("req: "+ req.session.userId);
+      console.log("wooooooo");
+});
 /*
 app.get('/users', function (req, res) {
       console.log("questo è il risultato del get");
