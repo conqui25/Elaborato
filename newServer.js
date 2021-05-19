@@ -23,7 +23,9 @@ var server = app.listen(8080, function () {
 
 var db = mysql.createConnection({
     host: "localhost",
+    //user: "root",
     user: "bookreview",
+    //password: "",
     password: "eKl1Etvl4eNnpMJ7",
     database: "bookreview"
 });
@@ -138,7 +140,6 @@ app.get('/logout', function (req, res) {
     res.clearCookie("sid");
 })
 function adminCheck(session, res) {
-
     if (!session.loggedIn) {
         res.send("not logged");
         return false;
@@ -154,7 +155,7 @@ function adminCheck(session, res) {
         result = JSON.parse(JSON.stringify(results))[0];
         console.log(result);
         if (!result.admin) {
-            res.send("you don't have permission to add an author");
+            res.send("you don't have permission to do that");
             return false;
         }
     });

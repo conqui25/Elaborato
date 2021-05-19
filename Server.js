@@ -47,13 +47,14 @@ del review
 ---
 per aggiunta ed eliminazione faccio controllo se admin nel server api
 */
+/*
 db.connect(function (err) {
       if (err) {
             console.error('error connecting: ' + err.stack);
             return;
       }
       console.log('connected as id ' + db.threadId);
-});
+});*/
 app.get('/', function (req, res) {
       console.log("user id: ");
       console.log(req.session);
@@ -63,6 +64,13 @@ app.get('/', function (req, res) {
             res.render('login.html');
       }
 });
+app.get('/script', function (req, res){
+      const java = fs.readFileSync("./views/script.js");
+      res.setHeader("Content-Type", "text/javascript");
+      res.write(java);
+      res.end;
+});
+
 app.post('/register', function (req, res) {
       console.log("register");
       let sql = 'INSERT INTO users SET ?';
