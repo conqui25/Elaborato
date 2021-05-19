@@ -62,6 +62,13 @@ db.connect(function (err) {
     console.log('connected as id ' + db.threadId);
 });
 
+function error(err, res) {
+    if (err) {
+        res.send(err);
+        return true;
+    }
+    return false;
+}
 app.post('/register', function (req, res) {
     console.log("register");
     if (req.session.loggedIn) {
@@ -81,7 +88,10 @@ app.post('/register', function (req, res) {
     //controllo email
     let sql = 'SELECT 1 FROM users WHERE users.username = ? OR users.email = ? LIMIT 1';
     db.query(sql, [username, email], (err, results) => {
-        if (err) throw err;
+        if (err) {
+            res.send(err);
+            return;
+        }
         if (results.length > 0) {
             res.send('already exist');
             return;
@@ -97,7 +107,7 @@ app.post('/register', function (req, res) {
         };
         sql = 'INSERT INTO users SET ?';
         db.query(sql, post, (err, results) => {
-            if (err) throw err;
+            if (error(err, res)) return;
             res.send("register succesful");
         });
 
@@ -115,6 +125,7 @@ app.post('/login', function (req, res) {
         return;
     } else if (username && password) {
         db.query(sql, [username, password], (err, results) => {
+            if (error(err, res)) return;
             if (results.length > 0) {
                 result = JSON.parse(JSON.stringify(results))[0];
                 console.log(result);
@@ -124,7 +135,6 @@ app.post('/login', function (req, res) {
             } else {
                 res.send('Incorrect Username and/or Password!');
             }
-            if (err) throw err;
             res.send('login successful');
         });
     } else {
@@ -135,7 +145,7 @@ app.post('/login', function (req, res) {
 
 app.get('/logout', function (req, res) {
     req.session.destroy(err => {
-        if (err) throw err;
+        if (error(err, res)) return;
     })
     res.clearCookie("sid");
 })
@@ -144,10 +154,13 @@ function adminCheck(session, res) {
         res.send("not logged");
         return false;
     }
-    let userId = 0000000001//session.userId;
+    let userId = session.userId;
     let sql = 'SELECT users.admin FROM users WHERE users.id = ? LIMIT 1';
     db.query(sql, userId, (err, results) => {
-        if (err) throw err;
+        if (err) {
+            res.send(err);
+            return;
+        }
         if (results.length <= 0) {
             res.send("account invalid");
             return false;
@@ -162,18 +175,99 @@ function adminCheck(session, res) {
     return true;
 }
 app.post('/author/add', function (req, res) {
-    if(adminCheck(req.session, res)){
+    if (adminCheck(req.session, res)) {
         let post = {
             name: req.body.name,
             biography: req.body.biography
         };
         sql = 'INSERT INTO authors SET ?';
         db.query(sql, post, (err, results) => {
-            if (err) throw err;
+            if (error(err, res)) return;
             res.send("register succesful");
         });
     }
 });
+app.post('/book/add', function (req, res) {
+    if (adminCheck(req.session, res)) {
+        let authors = req.body.authors
+        authors = authors.split(", ");
+        sql = 'SELECT authors.id FROM authors WHERE authors.name = ?';
+        //var bool = true;
+        var e = true;
+        if (authors.length > 1) {
+            for(i = 1; i<authors.length; i++) {
+                sql += " OR authors.name = ?";
+            }
+        }
+        console.log(authors);
+        let authorsId;
+        db.query(sql, authors, (err, results) => {
+            if (error(err, res)) return;
+            authorsId = JSON.parse(JSON.stringify(results));
+            console.log("sono qui");
+            console.log("autori: " + authorsId);
+            /*
+                    authors.every(author => {
+                        console.log("sono qui" + author);
+                        db.query(sql, author, (err, results) => {
+                            if (error(err, res)) {
+                                error = true;
+                                bool = false
+                                return;
+                            }
+                            if (results.length > 0) bool = false;
+                        });
+                        return bool;
+                    });
+                    if (bool || error) {
+                        res.send("invalid authors");
+                        return;
+                    }
+                    */
+            let post = {
+                title: req.body.title,
+                summary: req.body.summary,
+            };
+            sql = 'INSERT INTO books SET ?';
+            db.query(sql, post, (err, results) => {
+                if (error(err, res)) return;
+                let bookId;
+                db.query("SELECT books.id FROM books WHERE books.title = ?", req.body.title, (err, results) => {
+                    if (error(err, res)) return;
+                    bookId = results[0];
+                });
+                sql2 = 'SELECT authors.id FROM authors WHERE authors.name = ?';
+                authors.every(author => {
+                    db.query(sql2, author, (err, results) => {
+                        if (error(err, res)) {
+                            e = false
+                            return;
+                        }
+                        if (results.length > 0) {
+                            sql = 'INSERT INTO write SET ?';
+                            post = {
+                                author: results[0],
+                                book: bookId
+                            }
+                            db.query(sql, post, (err, results) => {
+                                if (error(err, res)) {
+                                    e = false
+                                    return;
+                                }
+                            });
+                        }
+                    });
+                    return e;
+                });
+                if (e) {
+                    return;
+                }
+                res.send("book register succesful");
+            });
+        });
+    }
+});
+
 /*
 app.post('/book/add', function (req, res) {
     if (req.session.loggedIn)
