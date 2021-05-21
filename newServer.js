@@ -202,63 +202,84 @@ app.post('/book/add', function (req, res) {
         console.log(authors);
         db.query(sql, authors, (err, results) => {
             if (error(err, res)) return;
-            let authorsId = results.map(x => x.id);
-            //authorsId = JSON.parse(JSON.stringify(results));
-            console.log("autori: " + authorsId);
-            /*
-                    authors.every(author => {
-                        console.log("sono qui" + author);
-                        db.query(sql, author, (err, results) => {
-                            if (error(err, res)) {
-                                error = true;
-                                bool = false
-                                return;
-                            }
-                            if (results.length > 0) bool = false;
-                        });
-                        return bool;
-                    });
-                    if (bool || error) {
-                        res.send("invalid authors");
-                        return;
-                    }
-                    */
-            let post = {
-                title: req.body.title,
-                summary: req.body.summary,
-            };
-            sql = 'INSERT INTO books SET ?';
-            db.query(sql, post, (err, results) => {
-                if (error(err, res)) return;
-                let bookId;
-                db.query("SELECT books.id FROM books WHERE books.title = ?", req.body.title, (err, results) => {
+            if (results.length >= 1) {
+                let authorsId = results.map(x => x.id);
+                console.log("autori: " + authorsId);
+                let post = {
+                    title: req.body.title,
+                    summary: req.body.summary,
+                };
+                sql = 'INSERT INTO books SET ?';
+                db.query(sql, post, (err, results) => {
                     if (error(err, res)) return;
-                    bookId = results[0].id;
-                    sql = 'INSERT INTO `write` SET ?';
-                    //sql = "INSERT INTO `write` (`author`, `book`) VALUES ('000005', '0000000003')"
-                    authorsId.every(author => {
-                        post = {
-                            author: author,
-                            book: bookId
-                        }
-                        db.query(sql, post, (err, results) => {
-                            if (error(err, res)) {
-                                e = false
-                                return;
+                    let bookId;
+                    db.query("SELECT books.id FROM books WHERE books.title = ?", req.body.title, (err, results) => {
+                        if (error(err, res)) return;
+                        bookId = results[0].id;
+                        sql = 'INSERT INTO `write` SET ?';
+                        //sql = "INSERT INTO `write` (`author`, `book`) VALUES ('000005', '0000000003')"
+                        authorsId.every(author => {
+                            post = {
+                                author: author,
+                                book: bookId
                             }
-                            console.log("author: " + post.author + " - book: " + post.book)
+                            db.query(sql, post, (err, results) => {
+                                if (error(err, res)) {
+                                    e = false
+                                    return;
+                                }
+                                console.log("author: " + post.author + " - book: " + post.book)
+                            });
+                            return true;
                         });
-                        return true;
+                        if (e) {
+                            console.log("book register succesful BUT author error");
+                            return;
+                        } else {
+                            console.log("book register succesful");
+                        }
                     });
-                    if (e) {
-                        console.log("book register succesful BUT author error");
-                        return;
-                    } else {
-                        console.log("book register succesful");
-                    }
                 });
-            });
+            }
         });
     }
     res.end()
+});
+app.post('/review/add', function (req, res) {
+    if (!req.session.loggedIn) {
+        res.send("not logged")
+        res.end();
+        return;
+    }
+    sql = 'SELECT books.id FROM books WHERE books.title = ?';
+    db.query(sql, req.body.title, (err, results) => {
+        if (error(err, res)) return;
+        if (results.length === 0) {
+            console.log("book doesn't exist");
+        } else {
+            bookId = results[0].id;
+            userId = req.session.userId;
+            sql = 'SELECT reviews.id FROM reviews WHERE reviews.bookId = ? AND reviews.userId = ?';
+            db.query(sql, [bookId, userId], (err, results) => {
+                if (error(err, res)) {
+                    return;
+                }
+                if (results.length >= 1) {
+                    console.log("user already have a review for this book");
+                } else {
+                    post = {
+                        bookId: bookId,
+                        userId: req.session.userId,
+                        mark: req.body.mark,
+                        text: req.body.text
+                    }
+                    sql = 'INSERT INTO reviews SET ?';
+                    db.query(sql, post, (err, results) => {
+                        if (error(err, res)) return;
+                        res.send("review register succesful");
+                    });
+                }
+            });
+        }
+    });
 });
