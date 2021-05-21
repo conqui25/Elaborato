@@ -37,7 +37,7 @@ update profile /TODO
 ---
 get book
 get books
-add book
+add book /done
 update book
 del book
 ---
@@ -48,7 +48,7 @@ update authors
 del authors
 ---
 get reviews
-add review
+add review /done
 update review
 del review
 ---
@@ -84,19 +84,15 @@ app.post('/register', function (req, res) {
         res.send("invalid email")
         return;
     }
-    //controllo username
-    //controllo email
     let sql = 'SELECT 1 FROM users WHERE users.username = ? OR users.email = ? LIMIT 1';
     db.query(sql, [username, email], (err, results) => {
         if (err) {
             res.send(err);
             return;
         }
-        if (results.length > 0) {
+        if (results.length >= 1) {
             res.send('already exist');
             return;
-            //result = JSON.parse(JSON.stringify(results))[0];
-            //console.log(result);
         }
         let post = {
             firstName: req.body.firstName,
@@ -192,7 +188,6 @@ app.post('/book/add', function (req, res) {
         let authors = req.body.authors
         authors = authors.split(", ");
         sql = 'SELECT authors.id FROM authors WHERE authors.name = ?';
-        //var bool = true;
         var e = true;
         if (authors.length > 1) {
             for (i = 1; i < authors.length; i++) {
@@ -213,11 +208,12 @@ app.post('/book/add', function (req, res) {
                 db.query(sql, post, (err, results) => {
                     if (error(err, res)) return;
                     let bookId;
-                    db.query("SELECT books.id FROM books WHERE books.title = ?", req.body.title, (err, results) => {
+                    sql = "SELECT books.id FROM books WHERE books.title = ?";
+                    db.query(sql, req.body.title, (err, results) => {
                         if (error(err, res)) return;
                         bookId = results[0].id;
                         sql = 'INSERT INTO `write` SET ?';
-                        //sql = "INSERT INTO `write` (`author`, `book`) VALUES ('000005', '0000000003')"
+                        e = false;
                         authorsId.every(author => {
                             post = {
                                 author: author,
@@ -225,10 +221,10 @@ app.post('/book/add', function (req, res) {
                             }
                             db.query(sql, post, (err, results) => {
                                 if (error(err, res)) {
-                                    e = false
+                                    e = true
                                     return;
                                 }
-                                console.log("author: " + post.author + " - book: " + post.book)
+                                //console.log("author: " + post.author + " - book: " + post.book)
                             });
                             return true;
                         });
@@ -245,6 +241,7 @@ app.post('/book/add', function (req, res) {
     }
     res.end()
 });
+
 app.post('/review/add', function (req, res) {
     if (!req.session.loggedIn) {
         res.send("not logged")
@@ -283,3 +280,4 @@ app.post('/review/add', function (req, res) {
         }
     });
 });
+
