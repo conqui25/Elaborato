@@ -195,16 +195,15 @@ app.post('/book/add', function (req, res) {
         //var bool = true;
         var e = true;
         if (authors.length > 1) {
-            for(i = 1; i<authors.length; i++) {
+            for (i = 1; i < authors.length; i++) {
                 sql += " OR authors.name = ?";
             }
         }
         console.log(authors);
-        let authorsId;
         db.query(sql, authors, (err, results) => {
             if (error(err, res)) return;
-            authorsId = JSON.parse(JSON.stringify(results));
-            console.log("sono qui");
+            let authorsId = results.map(x => x.id);
+            //authorsId = JSON.parse(JSON.stringify(results));
             console.log("autori: " + authorsId);
             /*
                     authors.every(author => {
@@ -234,66 +233,32 @@ app.post('/book/add', function (req, res) {
                 let bookId;
                 db.query("SELECT books.id FROM books WHERE books.title = ?", req.body.title, (err, results) => {
                     if (error(err, res)) return;
-                    bookId = results[0];
-                });
-                sql2 = 'SELECT authors.id FROM authors WHERE authors.name = ?';
-                authors.every(author => {
-                    db.query(sql2, author, (err, results) => {
-                        if (error(err, res)) {
-                            e = false
-                            return;
+                    bookId = results[0].id;
+                    sql = 'INSERT INTO `write` SET ?';
+                    //sql = "INSERT INTO `write` (`author`, `book`) VALUES ('000005', '0000000003')"
+                    authorsId.every(author => {
+                        post = {
+                            author: author,
+                            book: bookId
                         }
-                        if (results.length > 0) {
-                            sql = 'INSERT INTO write SET ?';
-                            post = {
-                                author: results[0],
-                                book: bookId
+                        db.query(sql, post, (err, results) => {
+                            if (error(err, res)) {
+                                e = false
+                                return;
                             }
-                            db.query(sql, post, (err, results) => {
-                                if (error(err, res)) {
-                                    e = false
-                                    return;
-                                }
-                            });
-                        }
+                            console.log("author: " + post.author + " - book: " + post.book)
+                        });
+                        return true;
                     });
-                    return e;
+                    if (e) {
+                        console.log("book register succesful BUT author error");
+                        return;
+                    } else {
+                        console.log("book register succesful");
+                    }
                 });
-                if (e) {
-                    return;
-                }
-                res.send("book register succesful");
             });
         });
     }
+    res.end()
 });
-
-/*
-app.post('/book/add', function (req, res) {
-    if (req.session.loggedIn)
-        userId = req.session.userId;
-    let sql = 'SELECT user.admin FROM users WHERE users.id = ? LIMIT 1';
-    db.query(sql, userId, (err, results) => {
-        if (err) throw err;
-        if (results.length = 0) {
-            res.send("account invalid");
-            return;
-        } else if (!JSON.parse(JSON.stringify(results))[0].admin) {
-            res.send("you don't have permission to add a book");
-            return;
-        }
-    });
-    let post = {
-        author_id: req.body.firstName,
-        lastName: req.body.lastName,
-        username: req.body.username,
-        password: req.body.password,
-        email: req.body.email
-    };
-    sql = 'INSERT INTO books SET ?';
-        db.query(sql, post, (err, results) => {
-            if (err) throw err;
-            res.send("register succesful");
-        });
-});
-*/
