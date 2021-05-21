@@ -1,0 +1,12 @@
+html,
+body {
+  height: 100%;
+}
+.astext {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.hidden {
+  display: none;
+}
