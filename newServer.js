@@ -112,12 +112,13 @@ app.post('/register', function (req, res) {
 
 app.post('/login', function (req, res) {
     console.log("login");
+    console.log(req.body);
     let username = req.body.username;
     let password = req.body.password;
     let sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
     if (req.session.loggedIn) {
         console.log("id sessione: " + req.session.userId);
-        res.send("already logged")
+        res.send("already logged");
         return;
     } else if (username && password) {
         db.query(sql, [username, password], (err, results) => {
@@ -128,14 +129,15 @@ app.post('/login', function (req, res) {
                 req.session.userId = result.id
                 req.session.loggedIn = true;
                 console.log("id sessione appena creato: " + req.session.userId);
+                res.send('login successful');
             } else {
+                console.log('Incorrect Username and/or Password!');
                 res.send('Incorrect Username and/or Password!');
             }
-            res.send('login successful');
         });
     } else {
+        console.log('Please enter Username and Password!');
         res.send('Please enter Username and Password!');
-        res.end();
     }
 });
 

@@ -58,20 +58,52 @@
 
   </div>
   <div class="container-fluid hidden" id="div-profile" style="background-color: lightgreen; min-height: 100%;">
-    <form method="post" action="php/login.php" id="form-login">
-      <h1>Login</h1>
-      <input type="text" id="username" placeholder="Username" name="username">
-      <input type="password" id="password" placeholder="Password" name="password">
-      <button type="submit" name="login">Login</button>
-      <button type="button" id="goRegister">Don't have an account?</button>
-    </form>
-    <form method="post" action="php/register.php" class="hidden" id="form-register">
-      <h1>Register</h1>
-      <input type="text" id="username" placeholder="Username" name="username" maxlength="50" required>
-      <input type="password" id="password" placeholder="Password" name="password" required>
-      <button type="submit" name="register">Register</button>
-      <button type="button" id="goLogin">Already have an account?</button>
-    </form>
+    <div class="d-flex justify-content-center">
+      <form method="post" class="form" id="form-login">
+        <legend class="h1" style="text-align: center;">Login</legend>
+        <div class="mb-3">
+          <input type="text" id="username-login" class="form-control" placeholder="Username" name="username" maxlength="50"
+            required>
+        </div>
+        <div class="mb-3">
+          <input type="password" id="password-login" class="form-control" placeholder="Password" name="password" required>
+        </div>
+        <div class="mb-3">
+          <button type="button" class="form-control" id="login">Login</button>
+        </div>
+        <div class="mb-3">
+          <button type="button" class="form-control" id="goRegister">Don't have an account?</button>
+        </div>
+      </form>
+
+      <form method="post" class="hidden form" id="form-register">
+        <legend class="h1"style="text-align: center;">Register</legend>
+        <div class="mb-3">
+          <input type="text" id="firstName" class="form-control" placeholder="Name" name="firstName" maxlength="30"
+            required>
+        </div>
+        <div class="mb-3">
+          <input type="text" id="lastName" class="form-control" placeholder="Surname" name="lastName" maxlength="30"
+            required>
+        </div>
+        <div class="mb-3">
+          <input type="text" id="username-register" class="form-control" placeholder="Username" name="username" maxlength="50"
+            required>
+        </div>
+        <div class="mb-3">
+          <input type="password" id="password-register" class="form-control" placeholder="Password" name="password" required>
+        </div>
+        <div class="mb-3">
+          <input type="email" id="email" class="form-control" placeholder="Email" name="email" maxlength="50" required>
+        </div>
+        <div class="mb-3">
+          <button type="button" class="form-control" id="register">Register</button>
+        </div>
+        <div class="mb-3">
+          <button type="button" class="form-control" id="goLogin">Already have an account?</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="script.js"></script>
