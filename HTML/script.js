@@ -4,6 +4,10 @@ const btnAuthors = document.getElementById("btn-authors");
 const btnBooks = document.getElementById("btn-books");
 const btnProfile = document.getElementById("btn-profile");
 
+let div = document.getElementById("div-profile");
+    hidePage();
+    div.classList.remove("hidden");
+
 function hidePage (){
     let div1 = document.getElementById("div-home");
     let div2 = document.getElementById("div-authors");
@@ -56,13 +60,8 @@ btnGoRegister.onclick = () => {
 
 const btnLogin = document.getElementById("login");
 const btnRegister = document.getElementById("register");
+
 btnLogin.onclick = () =>{
-    
-    postData(API_Link + "login").then(data => {
-        console.log(data);
-    });
-}
-async function postData(url = '') {
     username = document.getElementById("username-login").value;
     password = document.getElementById("password-login").value;
     console.log("username: " + username + "\npassword: " + password);
@@ -70,19 +69,24 @@ async function postData(url = '') {
         username: username,
         password: password
     }
+    postData(API_Link + "login", data).then(data => {
+        console.log(data);
+    });
+}
+async function postData(url = '', data) {
     // Default options are marked with *
     console.log(data);
     const response = await fetch(url, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      mode: 'no-cors', // no-cors, *cors, same-origin
-      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
-      credentials: 'include', // include, *same-origin, omit
+      //mode: 'no-cors', // no-cors, *cors, same-origin
+      //cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      //credentials: 'include', // include, *same-origin, omit
       headers: {
         'Content-Type': 'application/json',
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
-      redirect: 'follow', // manual, *follow, error
-      referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+      //redirect: 'follow', // manual, *follow, error
+      //referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
       body: JSON.stringify(data) // body data type must match "Content-Type" header
     });
     console.log(response.body);

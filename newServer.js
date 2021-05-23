@@ -3,7 +3,9 @@ const app = express();
 const session = require('express-session');
 const mysql = require('mysql');
 const time = (1000 * 60 * 60 * 2);
+const cors = require('cors');
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('./public'))
